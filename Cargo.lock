@@ -1828,6 +1828,7 @@ dependencies = [
  "cargo-manifest",
  "leaky-bucket",
  "poem",
+ "rand",
  "serde",
  "serde_yml",
  "shuttle-poem",

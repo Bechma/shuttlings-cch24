@@ -16,5 +16,8 @@ serde_yml = "0.0.12"
 # day 9
 leaky-bucket = "1.1.2"
 
+# day 12
+rand = "0.8.5"
+
 [dev-dependencies]
 tokio = "1.41.1"
