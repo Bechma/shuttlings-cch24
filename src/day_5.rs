@@ -1,8 +1,9 @@
 use cargo_manifest::Manifest;
-use poem::http::StatusCode;
 use poem::web::headers::ContentType;
 use poem::web::TypedHeader;
-use poem::{handler, post, Body, IntoResponse, Response, Route};
+use poem::Body;
+use poem_openapi::payload::PlainText;
+use poem_openapi::OpenApi;
 use serde::Deserialize;
 
 struct SkipErrorVisitor<T>(std::marker::PhantomData<T>);
@@ -57,24 +58,34 @@ struct Order {
     quantity: Option<u32>,
 }
 
+#[derive(Debug, poem_openapi::ApiResponse)]
+enum MyResponse {
+    #[oai(status = 200)]
+    Ok(PlainText<String>),
+    #[oai(status = 204)]
+    NoContent,
+    #[oai(status = 400)]
+    BadRequest(PlainText<String>),
+    #[oai(status = 415)]
+    UnsupportedMediaType,
+}
+
 impl std::fmt::Display for Order {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}: {}", self.item, self.quantity.unwrap_or_default())
     }
 }
 
-fn parse_manifest(manifest: Manifest<Metadata>) -> Response {
+fn parse_manifest(manifest: Manifest<Metadata>) -> MyResponse {
     let Some(package) = manifest.package else {
-        return StatusCode::NO_CONTENT.into_response();
+        return MyResponse::BadRequest(PlainText("".to_string()));
     };
 
     if package.keywords.map_or(true, |x| {
         x.as_local()
             .map_or(true, |x| !x.iter().any(|k| k == "Christmas 2024"))
     }) {
-        return StatusCode::BAD_REQUEST
-            .with_body("Magic keyword not provided")
-            .into_response();
+        return MyResponse::BadRequest(PlainText("Magic keyword not provided".to_string()));
     }
 
     let body = package
@@ -91,41 +102,40 @@ fn parse_manifest(manifest: Manifest<Metadata>) -> Response {
         .unwrap_or_default();
 
     if body.is_empty() {
-        StatusCode::NO_CONTENT.into_response()
+        MyResponse::NoContent
     } else {
-        StatusCode::OK.with_body(body).into_response()
+        MyResponse::Ok(PlainText(body))
     }
 }
 
-fn parse_error<T: std::fmt::Display>(err: T) -> Response {
+fn parse_error<T: std::fmt::Display>(err: T) -> MyResponse {
     eprintln!("Failed to parse manifest: {err}");
-    StatusCode::BAD_REQUEST
-        .with_body("Invalid manifest")
-        .into_response()
+    MyResponse::BadRequest(PlainText("Invalid manifest".to_string()))
 }
 
-#[allow(dead_code)]
-#[handler]
-async fn manifest_handler(TypedHeader(ct): TypedHeader<ContentType>, body: Body) -> Response {
-    let content_type = ct.to_string();
-    if content_type.contains("toml") {
-        Manifest::<Metadata>::from_slice_with_metadata(
-            body.into_vec().await.unwrap_or_default().as_slice(),
-        )
-        .map_or_else(parse_error, parse_manifest)
-    } else if content_type.contains("json") {
-        body.into_json()
-            .await
+pub struct Api;
+
+#[OpenApi(prefix_path = "/5")]
+impl Api {
+    #[oai(path = "/manifest", method = "post")]
+    async fn manifest(&self, TypedHeader(ct): TypedHeader<ContentType>, body: Body) -> MyResponse {
+        let content_type = ct.to_string();
+        if content_type.contains("toml") {
+            Manifest::<Metadata>::from_slice_with_metadata(
+                body.into_vec().await.unwrap_or_default().as_slice(),
+            )
             .map_or_else(parse_error, parse_manifest)
-    } else if content_type.contains("yaml") {
-        body.into_string().await.map_or_else(parse_error, |x| {
-            serde_yml::from_str::<Manifest<Metadata>>(&x).map_or_else(parse_error, parse_manifest)
-        })
-    } else {
-        StatusCode::UNSUPPORTED_MEDIA_TYPE.into_response()
+        } else if content_type.contains("json") {
+            body.into_json()
+                .await
+                .map_or_else(parse_error, parse_manifest)
+        } else if content_type.contains("yaml") {
+            body.into_string().await.map_or_else(parse_error, |x| {
+                serde_yml::from_str::<Manifest<Metadata>>(&x)
+                    .map_or_else(parse_error, parse_manifest)
+            })
+        } else {
+            MyResponse::UnsupportedMediaType
+        }
     }
-}
-
-pub(crate) fn route() -> Route {
-    Route::new().at("/manifest", post(manifest_handler))
 }

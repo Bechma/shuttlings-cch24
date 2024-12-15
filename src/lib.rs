@@ -1,23 +1,34 @@
-use poem::{get, handler, Route};
+use poem::Route;
+use poem_openapi::payload::PlainText;
+use poem_openapi::{OpenApi, OpenApiService};
 
 mod day1;
+mod day_12;
 mod day_2;
 mod day_5;
 mod day_9;
-mod day_12;
 
-#[handler]
-fn hello_world() -> &'static str {
-    "Hello, bird!"
+struct Api;
+
+#[OpenApi]
+impl Api {
+    #[oai(path = "/", method = "get")]
+    async fn index(&self) -> PlainText<&'static str> {
+        PlainText("Hello, bird!")
+    }
 }
 
 #[must_use]
 pub fn main_router() -> Route {
+    let oapi = OpenApiService::new(
+        (Api, day1::Api, day_2::Api, day_5::Api),
+        "Shuttling-cch24",
+        "1.0",
+    );
+    let swagger_ui = oapi.swagger_ui();
     Route::new()
-        .at("/", get(hello_world))
-        .nest("/-1", day1::route())
-        .nest("/2", day_2::route())
-        .nest("/5", day_5::route())
+        .nest("/", oapi)
         .nest("/9", day_9::route())
         .nest("/12", day_12::route())
+        .nest("/swagger", swagger_ui)
 }

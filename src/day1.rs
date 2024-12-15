@@ -1,15 +1,18 @@
-#![allow(dead_code)]
+use poem_openapi::OpenApi;
 
-use poem::http::StatusCode;
-use poem::{get, handler, IntoResponse, Response, Route};
+pub struct Api;
 
-#[handler]
-fn seek() -> Response {
-    StatusCode::FOUND
-        .with_header("Location", "https://www.youtube.com/watch?v=9Gc4QTqslN4")
-        .into_response()
+#[derive(Debug, poem_openapi::ApiResponse)]
+enum MyResponse {
+    #[oai(status = 302)]
+    Ok(#[oai(header = "Location")] String),
 }
 
-pub fn route() -> Route {
-    Route::new().at("/seek", get(seek))
+#[OpenApi(prefix_path = "/-1")]
+impl Api {
+    #[allow(clippy::unused_async)]
+    #[oai(path = "/seek", method = "get")]
+    async fn seek(&self) -> MyResponse {
+        MyResponse::Ok("https://www.youtube.com/watch?v=9Gc4QTqslN4".to_string())
+    }
 }

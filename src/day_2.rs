@@ -1,94 +1,66 @@
-#![allow(dead_code)]
-
-use poem::web::Query;
-use poem::{get, handler, Route};
-use serde::Deserialize;
+use poem_openapi::param::Query;
+use poem_openapi::payload::PlainText;
+use poem_openapi::OpenApi;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::ops::BitXor;
 
-#[derive(Deserialize)]
-struct Task1 {
-    from: Ipv4Addr,
-    key: Ipv4Addr,
-}
+pub struct Api;
 
-#[handler]
-fn dest(Query(q): Query<Task1>) -> String {
-    q.from
-        .octets()
-        .iter()
-        .zip(q.key.octets().iter())
-        .map(|(&f, &k)| {
-            let (res, _) = f.overflowing_add(k);
-            res.to_string()
-        })
-        .collect::<Vec<_>>()
-        .join(".")
-}
-
-#[derive(Deserialize)]
-struct Task2 {
-    from: Ipv4Addr,
-    to: Ipv4Addr,
-}
-
-#[handler]
-fn key(Query(q): Query<Task2>) -> String {
-    q.to.octets()
-        .iter()
-        .zip(q.from.octets().iter())
-        .map(|(&f, &k)| {
-            let (res, _) = f.overflowing_sub(k);
-            res.to_string()
-        })
-        .collect::<Vec<_>>()
-        .join(".")
-}
-
-#[derive(Deserialize)]
-struct Task3Dest {
-    from: Ipv6Addr,
-    key: Ipv6Addr,
-}
-
-#[handler]
-fn v6_dest(Query(q): Query<Task3Dest>) -> String {
-    let mut result = [0u8; 16];
-
-    for (i, (&f, &k)) in q
-        .from
-        .octets()
-        .iter()
-        .zip(q.key.octets().iter())
-        .enumerate()
-    {
-        result[i] = f.bitxor(k);
+#[OpenApi(prefix_path = "/2")]
+impl Api {
+    #[allow(clippy::unused_async)]
+    #[oai(path = "/dest", method = "get")]
+    async fn dest(&self, from: Query<Ipv4Addr>, key: Query<Ipv4Addr>) -> PlainText<String> {
+        PlainText(
+            from.octets()
+                .iter()
+                .zip(key.octets().iter())
+                .map(|(&f, &k)| {
+                    let (res, _) = f.overflowing_add(k);
+                    res.to_string()
+                })
+                .collect::<Vec<_>>()
+                .join("."),
+        )
     }
 
-    Ipv6Addr::from(result).to_string()
-}
-
-#[derive(Deserialize)]
-struct Task3Key {
-    from: Ipv6Addr,
-    to: Ipv6Addr,
-}
-
-#[handler]
-fn v6_key(Query(q): Query<Task3Key>) -> String {
-    let mut result = [0u8; 16];
-
-    for (i, (&t, &f)) in q.to.octets().iter().zip(q.from.octets().iter()).enumerate() {
-        result[i] = t.bitxor(f);
+    #[allow(clippy::unused_async)]
+    #[oai(path = "/key", method = "get")]
+    async fn key(&self, to: Query<Ipv4Addr>, from: Query<Ipv4Addr>) -> PlainText<String> {
+        PlainText(
+            to.octets()
+                .iter()
+                .zip(from.octets().iter())
+                .map(|(&f, &k)| {
+                    let (res, _) = f.overflowing_sub(k);
+                    res.to_string()
+                })
+                .collect::<Vec<_>>()
+                .join("."),
+        )
     }
 
-    Ipv6Addr::from(result).to_string()
-}
+    #[allow(clippy::unused_async)]
+    #[oai(path = "/v6/dest", method = "get")]
+    async fn v6_dest(&self, from: Query<Ipv6Addr>, key: Query<Ipv6Addr>) -> PlainText<String> {
+        let mut result = [0u8; 16];
 
-pub fn route() -> Route {
-    Route::new()
-        .at("/dest", get(dest))
-        .at("/key", get(key))
-        .at("/v6/dest", get(v6_dest))
-        .at("/v6/key", get(v6_key))
+        for (i, (&f, &k)) in from.octets().iter().zip(key.octets().iter()).enumerate() {
+            result[i] = f.bitxor(k);
+        }
+
+        PlainText(Ipv6Addr::from(result).to_string())
+    }
+
+    #[allow(clippy::unused_async)]
+    #[oai(path = "/v6/key", method = "get")]
+    async fn v6_key(&self, to: Query<Ipv6Addr>, from: Query<Ipv6Addr>) -> PlainText<String> {
+        let mut result = [0u8; 16];
+
+        for (i, (&t, &f)) in to.octets().iter().zip(from.octets().iter()).enumerate() {
+            result[i] = t.bitxor(f);
+        }
+
+        PlainText(Ipv6Addr::from(result).to_string())
+    }
 }
