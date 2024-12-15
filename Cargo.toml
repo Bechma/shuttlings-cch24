@@ -8,8 +8,13 @@ poem = { version = "3.1.5", features = ["test"] }
 shuttle-poem = "0.49.0"
 shuttle-runtime = "0.49.0"
 serde = { version = "1.0.215", features = ["derive"] }
+
+# day 5
 cargo-manifest = "0.17.0"
 serde_yml = "0.0.12"
+
+# day 9
+leaky-bucket = "1.1.2"
 
 [dev-dependencies]
 tokio = "1.41.1"

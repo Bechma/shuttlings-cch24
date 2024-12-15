@@ -3,6 +3,7 @@ use poem::{get, handler, Route};
 mod day1;
 mod day_2;
 mod day_5;
+mod day_9;
 
 #[handler]
 fn hello_world() -> &'static str {
@@ -16,4 +17,5 @@ pub fn main_router() -> Route {
         .nest("/-1", day1::route())
         .nest("/2", day_2::route())
         .nest("/5", day_5::route())
+        .nest("/9", day_9::route())
 }
