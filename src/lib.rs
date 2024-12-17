@@ -7,6 +7,7 @@ mod day_12;
 mod day_2;
 mod day_5;
 mod day_9;
+mod day_16;
 
 struct Api;
 
@@ -21,7 +22,7 @@ impl Api {
 #[must_use]
 pub fn main_router() -> Route {
     let oapi = OpenApiService::new(
-        (Api, day1::Api, day_2::Api, day_5::Api),
+        (Api, day1::Api, day_2::Api, day_5::Api, day_16::Api::new()),
         "Shuttling-cch24",
         "1.0",
     );
