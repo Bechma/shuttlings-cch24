@@ -1,6 +1,7 @@
+mod helper;
+use helper::main_router;
 use poem::http::StatusCode;
 use poem::test::TestClient;
-use shuttlings_cch24::main_router;
 
 async fn t(path: &str, content_type: &str, body: &str, status: StatusCode, response: Option<&str>) {
     let res = TestClient::new(main_router())

@@ -1,5 +1,3 @@
-use poem_openapi::OpenApi;
-
 pub struct Api;
 
 #[derive(Debug, poem_openapi::ApiResponse)]
@@ -8,7 +6,7 @@ enum MyResponse {
     Ok(#[oai(header = "Location")] String),
 }
 
-#[OpenApi(prefix_path = "/-1")]
+#[poem_openapi::OpenApi(prefix_path = "/-1")]
 impl Api {
     #[allow(clippy::unused_async)]
     #[oai(path = "/seek", method = "get")]

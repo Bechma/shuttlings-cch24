@@ -8,6 +8,7 @@ mod day_2;
 mod day_5;
 mod day_9;
 mod day_16;
+mod day_19;
 
 struct Api;
 
@@ -20,9 +21,9 @@ impl Api {
 }
 
 #[must_use]
-pub fn main_router() -> Route {
+pub fn main_router(pool: sqlx::PgPool) -> Route {
     let oapi = OpenApiService::new(
-        (Api, day1::Api, day_2::Api, day_5::Api, day_16::Api::new()),
+        (Api, day1::Api, day_2::Api, day_5::Api, day_16::Api::new(), day_19::Api::new(pool)),
         "Shuttling-cch24",
         "1.0",
     );

@@ -1,5 +1,6 @@
+mod helper;
+use helper::main_router;
 use poem::test::TestClient;
-use shuttlings_cch24::main_router;
 
 #[tokio::test]
 async fn test_day2_task1_1() {
