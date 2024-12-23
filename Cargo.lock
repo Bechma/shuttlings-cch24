@@ -101,6 +101,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c95c10ba0b00a02636238b814946408b1322d5ac4760326e6fb8ec956d85775"
 
 [[package]]
+name = "askama_escape"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "619743e34b5ba4e9703bba34deac3427c72507c7159f5fd030aea8cac0cfe341"
+
+[[package]]
 name = "async-stream"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -685,7 +691,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33d852cb9b869c2a9b3df2f71a3074817f01e1844f839a144f5fcef059a4eb5d"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1861,9 +1867,11 @@ dependencies = [
  "headers 0.4.0",
  "http 1.1.0",
  "http-body-util",
+ "httpdate",
  "hyper 1.5.1",
  "hyper-util",
  "mime",
+ "mime_guess",
  "multer",
  "nix",
  "parking_lot",
@@ -2318,7 +2326,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2702,6 +2710,7 @@ dependencies = [
 name = "shuttlings-cch24"
 version = "0.1.0"
 dependencies = [
+ "askama_escape",
  "base64 0.22.1",
  "cargo-manifest",
  "jsonwebtoken",
@@ -2717,6 +2726,7 @@ dependencies = [
  "shuttle-shared-db",
  "sqlx",
  "tokio",
+ "toml",
 ]
 
 [[package]]
@@ -3198,7 +3208,7 @@ dependencies = [
  "fastrand",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
